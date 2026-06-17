@@ -9,11 +9,11 @@ depend: [LuckPerms]
 commands:
   lumitag:
     description: Manage user rank nicknames
-    permission: lumitag.use
+    permission: lumitags.use
     usage: /lumitag
 
 permissions:
-  lumitag.use:
+  lumitags.use:
     description: Allows users to change their own rank nickname.
     default: op
   lumitag.moderator:
