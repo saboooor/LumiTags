@@ -1,0 +1,25 @@
+name: LumiTags
+version: '${project.version}'
+main: org.luminaramc.lumitags.LumiTags
+api-version: '1.20'
+description: A high-performance Java plugin to manage player rank nicknames using LuckPerms.
+authors: [saboooor]
+depend: [LuckPerms]
+
+commands:
+  lumitag:
+    description: Manage user rank nicknames
+    aliases: [ranknick]
+    permission: lumitag.use
+    usage: /lumitag
+
+permissions:
+  lumitag.use:
+    description: Allows users to change their own rank nickname.
+    default: op
+  lumitag.moderator:
+    description: Allows staff to change other users' rank nicknames.
+    default: op
+  lumitag.admin:
+    description: Allows admins to reload the plugin configuration.
+    default: op

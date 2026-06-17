@@ -1,0 +1,49 @@
+# ==========================================
+# LumiTags Configuration File
+# ==========================================
+
+# The weight/priority of the prefix node in LuckPerms.
+# Higher priority values take precedence.
+prefix-weight: 500
+
+# Permissions settings.
+# You can customize these if you want to use existing permission nodes.
+permissions:
+  use: "ranknick.use"
+  moderator: "group.moderator"
+  admin: "ranknick.admin"
+
+# Console commands to execute when a ranknick action is taken.
+# Placeholders: %player% (target player), %rank% (the rank nickname)
+commands:
+  on-set:
+    - "test"
+  on-off: []
+
+# Customize messages sent to players and staff.
+# Color codes (&) are supported.
+messages:
+  no-permission: "&cYou do not have permission to execute this command."
+  no-permission-other: "&cYou don't have the permission to set other people's ranknicks!"
+  
+  invalid-format: |
+    &cInvalid command format
+    &7Command Usage:
+    &b/ranknick set <Rank Name>
+    &b/ranknick off
+    
+  invalid-format-moderator: |
+    &cInvalid command format
+    &7Command Usage:
+    &b/ranknick set <Rank Name>
+    &b/ranknick <Player> <Rank Name>
+    &b/ranknick off
+
+  rank-changed-self: "&aRank successfully changed!"
+  rank-changed-other: "&a%player%'s Rank successfully changed!"
+  
+  rank-removed-self: "&cOld rank removed."
+  rank-removed-other: "&cRanknick removed for %player%."
+  
+  player-not-found: "&cPlayer '%player%' is not online or cannot be found."
+  reload-success: "&aLumiTags configuration successfully reloaded."
