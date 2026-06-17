@@ -9,7 +9,6 @@ depend: [LuckPerms]
 commands:
   lumitag:
     description: Manage user rank nicknames
-    aliases: [ranknick]
     permission: lumitag.use
     usage: /lumitag
 

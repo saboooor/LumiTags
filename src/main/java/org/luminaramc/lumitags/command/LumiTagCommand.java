@@ -21,9 +21,9 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        String usePerm = plugin.getConfig().getString("permissions.use", "ranknick.use");
+        String usePerm = plugin.getConfig().getString("permissions.use", "lumitags.use");
         String modPerm = plugin.getConfig().getString("permissions.moderator", "group.moderator");
-        String adminPerm = plugin.getConfig().getString("permissions.admin", "ranknick.admin");
+        String adminPerm = plugin.getConfig().getString("permissions.admin", "lumitags.admin");
 
         if (args.length == 0) {
             sendUsage(sender, modPerm);
@@ -131,9 +131,9 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        String usePerm = plugin.getConfig().getString("permissions.use", "ranknick.use");
+        String usePerm = plugin.getConfig().getString("permissions.use", "lumitags.use");
         String modPerm = plugin.getConfig().getString("permissions.moderator", "group.moderator");
-        String adminPerm = plugin.getConfig().getString("permissions.admin", "ranknick.admin");
+        String adminPerm = plugin.getConfig().getString("permissions.admin", "lumitags.admin");
 
         if (args.length == 1) {
             String input = args[0].toLowerCase();
