@@ -10,7 +10,7 @@ prefix-weight: 500
 # You can customize these if you want to use existing permission nodes.
 permissions:
   use: "lumitags.use"
-  moderator: "group.moderator"
+  moderator: "lumitags.moderator"
   admin: "lumitags.admin"
 
 # Console commands to execute when a lumitag action is taken.
