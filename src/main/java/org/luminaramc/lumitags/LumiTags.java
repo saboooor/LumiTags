@@ -84,6 +84,71 @@ public final class LumiTags extends JavaPlugin {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
+    /**
+     * Applies configured transformations to the rank name before setting it as a prefix.
+     * @param rankName The original rank name.
+     * @return The transformed rank name.
+     */
+    public String applyTransformations(String rankName) {
+        String transformedRankName = rankName;
+
+        // Apply transformations that are set by default, for example: bold and smallcaps
+        for (String transformation : getConfig().getStringList("transformations")) {
+            switch (transformation.toLowerCase()) {
+                case "uppercase":
+                    transformedRankName = transformedRankName.toUpperCase();
+                    break;
+                case "lowercase":
+                    transformedRankName = transformedRankName.toLowerCase();
+                    break;
+                case "capitalize":
+                    transformedRankName = capitalize(transformedRankName);
+                    break;
+                case "smallcaps":
+                    transformedRankName = toSmallCaps(transformedRankName);
+                    break;
+                case "bold":
+                    transformedRankName = ChatColor.BOLD + transformedRankName;
+                    break;
+                case "italic":
+                    transformedRankName = ChatColor.ITALIC + transformedRankName;
+                    break;
+                case "underline":
+                    transformedRankName = ChatColor.UNDERLINE + transformedRankName;
+                    break;
+                case "strikethrough":
+                    transformedRankName = ChatColor.STRIKETHROUGH + transformedRankName;
+                    break;
+                default:
+                    getLogger().warning("Unknown transformation '" + transformation + "' in config. Skipping.");
+            }
+        }
+
+        return transformedRankName;
+    }
+
+    private String toSmallCaps(String transformedRankName) {
+        String normal = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String smallcaps = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ";
+        StringBuilder sb = new StringBuilder();
+        for (char c : transformedRankName.toCharArray()) {
+            int index = normal.indexOf(c);
+            if (index != -1) {
+                sb.append(smallcaps.charAt(index));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private String capitalize(String transformedRankName) {
+        if (transformedRankName.isEmpty()) {
+            return transformedRankName;
+        }
+        return transformedRankName.substring(0, 1).toUpperCase() + transformedRankName.substring(1);
+    }
+
     public LuckPerms getLuckPerms() {
         return luckPerms;
     }

@@ -24,13 +24,15 @@ public class LuckPermsManager {
      */
     public void setLumiTag(UUID uuid, String rankName, Runnable onSuccess) {
         int priority = plugin.getConfig().getInt("prefix-weight", 500);
-        
+
+        String transformedRankName = plugin.applyTransformations(rankName);
+
         plugin.getLuckPerms().getUserManager().loadUser(uuid).thenAcceptAsync(user -> {
             // Remove any existing prefix at our priority level
             user.data().clear(NodeType.PREFIX.predicate(node -> node.getPriority() == priority));
 
             // Create and add the new prefix node
-            PrefixNode prefixNode = PrefixNode.builder(rankName, priority).build();
+            PrefixNode prefixNode = PrefixNode.builder(transformedRankName, priority).build();
             user.data().add(prefixNode);
 
             // Save the user data and fire success callback on the main server thread

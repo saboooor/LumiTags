@@ -17,8 +17,15 @@ permissions:
 # Placeholders: %player% (target player), %rank% (the rank nickname)
 commands:
   on-set:
-    - "test"
+    - "broadcast &a%player%'s tag has been changed to %rank%!"
   on-off: []
+
+# Transform
+# You can define transformations to apply to the rank nickname before setting it.
+# Supported transformations: uppercase, lowercase, capitalize, smallcaps, bold, italic, underline, strikethrough
+transformations:
+  - bold
+  - smallcaps
 
 # Customize messages sent to players and staff.
 # Color codes (&) are supported.
