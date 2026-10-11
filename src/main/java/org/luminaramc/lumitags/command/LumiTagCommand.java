@@ -10,6 +10,7 @@ import org.luminaramc.lumitags.LumiTags;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class LumiTagCommand implements CommandExecutor, TabCompleter {
 
@@ -68,20 +69,34 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Subcommand: off (self)
-        if (args[0].equalsIgnoreCase("off")) {
-            if (!(sender instanceof Player)) {
+        if (args[0].equalsIgnoreCase("claim")) {
+            if (!(sender instanceof Player player)) {
                 sender.sendMessage("This subcommand can only be executed by a player.");
                 return true;
             }
-            Player player = (Player) sender;
-            if (!player.hasPermission(usePerm)) {
-                player.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.no-permission")));
+            try {
+                plugin.getTagItemStore().deliver(player.getUniqueId());
+                player.sendMessage("Collected available returned tag items.");
+            } catch (java.io.IOException error) {
+                player.sendMessage("Could not collect returned items. Please try again.");
+                plugin.getLogger().log(java.util.logging.Level.SEVERE, "Could not collect tag items", error);
+            }
+            return true;
+        }
+
+        // Removing your own tag never requires custom-tag permission.
+        if (isUnset(args[0])) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage("This subcommand can only be executed by a player.");
                 return true;
             }
-
-            plugin.getLuckPermsManager().removeLumiTag(player.getUniqueId(), () -> {
-                player.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.rank-removed-self")));
+            String type = args.length == 1 ? "prefix" : args[1].toLowerCase(Locale.ROOT);
+            if (args.length > 2 || !isTagType(type)) {
+                sender.sendMessage("Usage: /lumitags unset [prefix|suffix]");
+                return true;
+            }
+            plugin.getLuckPermsManager().removeLumiTag(player.getUniqueId(), type, () -> {
+                player.sendMessage("Your " + type + " has been removed. Any applied item has been returned.");
                 runConsoleCommands(false, player, "");
             });
             return true;
@@ -133,8 +148,13 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
         }
 
         // Handle off for target player
-        if (args[1].equalsIgnoreCase("off")) {
-            plugin.getLuckPermsManager().removeLumiTag(target.getUniqueId(), () -> {
+        if (isUnset(args[1])) {
+            String type = args.length == 2 ? "prefix" : args[2].toLowerCase(Locale.ROOT);
+            if (args.length > 3 || !isTagType(type)) {
+                sender.sendMessage("Usage: /lumitags <player> unset [prefix|suffix]");
+                return true;
+            }
+            plugin.getLuckPermsManager().removeLumiTag(target.getUniqueId(), type, () -> {
                 String removedOther = plugin.getConfig().getString("messages.rank-removed-other", "&cRanknick removed for %player%.")
                         .replace("%player%", target.getName());
                 sender.sendMessage(plugin.colorize(removedOther));
@@ -158,6 +178,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
+        if (args.length == 0) return completions;
         String usePerm = plugin.getConfig().getString("permissions.use", "lumitags.use");
         String modPerm = plugin.getConfig().getString("permissions.moderator", "group.moderator");
         String adminPerm = plugin.getConfig().getString("permissions.admin", "lumitags.admin");
@@ -166,51 +187,87 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
         if (args[0].equalsIgnoreCase("give") && sender.hasPermission(givePerm)) {
             if (args.length == 2) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (player.getName().toLowerCase(java.util.Locale.ROOT).startsWith(args[1].toLowerCase(java.util.Locale.ROOT)))
+                    if (player.getName().toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT)))
                         completions.add(player.getName());
                 }
             } else if (args.length == 3) {
-                var presets = plugin.getConfig().getConfigurationSection("presets");
-                if (presets != null) for (String preset : presets.getKeys(false)) {
-                    if (preset.startsWith(args[2].toLowerCase(java.util.Locale.ROOT))) completions.add(preset);
-                }
+                addPresetCompletions(completions, args[2]);
             }
             if (args.length > 1) return completions;
         }
         if (args.length == 1) {
-            String input = args[0].toLowerCase();
+            String input = args[0].toLowerCase(Locale.ROOT);
             if (sender.hasPermission(givePerm) && "give".startsWith(input)) completions.add("give");
             if (sender.hasPermission(usePerm)) {
                 if ("set".startsWith(input)) completions.add("set");
-                if ("off".startsWith(input)) completions.add("off");
+            }
+            if (sender instanceof Player) {
+                for (String option : List.of("off", "unset", "claim")) {
+                    if (option.startsWith(input)) completions.add(option);
+                }
             }
             if (sender.hasPermission(adminPerm)) {
                 if ("reload".startsWith(input)) completions.add("reload");
             }
             if (sender.hasPermission(modPerm)) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (player.getName().toLowerCase().startsWith(input)) {
+                    if (player.getName().toLowerCase(Locale.ROOT).startsWith(input)) {
                         completions.add(player.getName());
                     }
                 }
             }
         } else if (args.length == 2) {
-            String input = args[1].toLowerCase();
-            if (!args[0].equalsIgnoreCase("set") && !args[0].equalsIgnoreCase("off") && !args[0].equalsIgnoreCase("reload")) {
+            String input = args[1].toLowerCase(Locale.ROOT);
+            if (isUnset(args[0]) && sender instanceof Player) {
+                addTagTypeCompletions(completions, input);
+            } else if (args[0].equalsIgnoreCase("set") && sender.hasPermission(usePerm)) {
+                addPresetCompletions(completions, input);
+            } else if (!args[0].equalsIgnoreCase("give") && !args[0].equalsIgnoreCase("set")
+                    && !isUnset(args[0]) && !args[0].equalsIgnoreCase("claim") && !args[0].equalsIgnoreCase("reload")) {
                 // First arg was likely a player name, check if sender is moderator
                 if (sender.hasPermission(modPerm)) {
                     if ("off".startsWith(input)) completions.add("off");
+                    if ("unset".startsWith(input)) completions.add("unset");
+                    addPresetCompletions(completions, input);
                 }
             }
+        } else if (args.length == 3 && isUnset(args[1]) && sender.hasPermission(modPerm)
+                && !List.of("give", "set", "off", "unset", "claim", "reload").contains(args[0].toLowerCase(Locale.ROOT))) {
+            addTagTypeCompletions(completions, args[2]);
         }
 
         return completions;
+    }
+
+    private boolean isUnset(String value) {
+        return value.equalsIgnoreCase("off") || value.equalsIgnoreCase("unset");
+    }
+
+    private boolean isTagType(String value) {
+        return value.equals("prefix") || value.equals("suffix");
+    }
+
+    private void addTagTypeCompletions(List<String> completions, String input) {
+        for (String type : List.of("prefix", "suffix")) {
+            if (type.startsWith(input.toLowerCase(Locale.ROOT))) completions.add(type);
+        }
+    }
+
+    private void addPresetCompletions(List<String> completions, String input) {
+        var presets = plugin.getConfig().getConfigurationSection("presets");
+        if (presets == null) return;
+        String partial = input.toLowerCase(Locale.ROOT);
+        presets.getKeys(false).stream()
+                .filter(preset -> preset.toLowerCase(Locale.ROOT).startsWith(partial))
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .forEach(completions::add);
     }
 
     private void sendUsage(CommandSender sender, String modPerm) {
         String msgKey = sender.hasPermission(modPerm) ? "messages.invalid-format-moderator" : "messages.invalid-format";
         String usage = plugin.getConfig().getString(msgKey);
         sender.sendMessage(plugin.colorize(usage));
+        sender.sendMessage("/lumitags unset [prefix|suffix]\n/lumitags claim");
         if (sender.hasPermission(plugin.getConfig().getString("permissions.give", "lumitags.give")))
             sender.sendMessage("/lumitags give <player> <preset or prefix>");
     }

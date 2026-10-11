@@ -13,7 +13,11 @@ lumitags give Steve cherry-blossom
 lumitags give Steve wave
 ```
 
-Preset IDs tab-complete and are configured under `presets` in `config.yml`.
+Preset IDs tab-complete for `/lumitags give <player> <preset>`,
+`/lumitags set <preset>`, and `/lumitags <player> <preset>`, filtered by
+the permissions for each command. They are configured under `presets` in
+`config.yml`. Set commands apply a preset’s formatting and prefix/suffix type;
+inputs that do not match a preset remain custom text.
 All 26 rewards from the prototype are included, with their original formatting.
 The 13 text rewards are prefixes; the 13 emoji/symbol rewards are suffixes.
 Emoji items (for example, `wave`) replace only the current suffix, so players
@@ -40,6 +44,25 @@ Commands:
   - "lumitags give %player% coffee"
 ```
 
+## Removing tags and returning items
+
+Use `/lumitags unset [prefix|suffix]` (default: prefix). `/lumitags off`
+is an alias. Removing your own tag requires no custom-tag permission.
+Staff can use `/lumitags <player> unset [prefix|suffix]` with the moderator
+permission.
+
+An item applied with right-click is held while its tag is active. Replacing
+that same tag type, including through a set command, or unsetting it returns
+the exact item. Command-created tags do not produce items when removed.
+Prefix and suffix ownership are independent.
+
+Ownership and returned items are saved in `tag-items.yml` across restarts.
+If the inventory is full or the player is offline, returns wait in a queue.
+They are delivered on joining or with `/lumitags claim`; no permission is needed.
+Items applied before ownership tracking was installed cannot be recovered
+because the original consumed item was not recorded. Changes made directly
+in LuckPerms are outside this plugin's item-return lifecycle.
+
 ## Verification
 
 Build with `mvn package`. Before deployment, test on a Paper server with LuckPerms:
@@ -54,3 +77,11 @@ Build with `mvn package`. Before deployment, test on a Paper server with LuckPer
 - Confirm a player without `lumitags.give` cannot create items, and a full
   inventory rejects delivery.
 - Open the example crate and verify its reward is redeemable.
+
+- Apply an item, replace it using another item or a set command, then unset
+  the new tag. Each applied item should return exactly once; unsetting again
+  must not create another item. Check prefix and suffix independently.
+- Restart with an item applied, then unset it. Fill the inventory before
+  unsetting and confirm `/lumitags claim` delivers the queued item once there
+  is space. Disconnect while applying an item and confirm any return arrives
+  on the next join.

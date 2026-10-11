@@ -13,6 +13,7 @@ import java.util.logging.Level;
 public final class LumiTags extends JavaPlugin {
 
     private org.luminaramc.lumitags.item.PrefixItems prefixItems;
+    private org.luminaramc.lumitags.item.TagItemStore tagItemStore;
     private LuckPerms luckPerms;
     private LuckPermsManager luckPermsManager;
 
@@ -27,6 +28,9 @@ public final class LumiTags extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        tagItemStore = new org.luminaramc.lumitags.item.TagItemStore(this);
+        getServer().getPluginManager().registerEvents(tagItemStore, this);
 
         // Initialize manager
         this.luckPermsManager = new LuckPermsManager(this);
@@ -169,6 +173,8 @@ public final class LumiTags extends JavaPlugin {
         }
         return transformedRankName.substring(0, 1).toUpperCase() + transformedRankName.substring(1);
     }
+
+    public org.luminaramc.lumitags.item.TagItemStore getTagItemStore() { return tagItemStore; }
 
     public org.luminaramc.lumitags.item.PrefixItems getPrefixItems() {
         return prefixItems;

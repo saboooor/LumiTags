@@ -41,14 +41,16 @@ messages:
     &cInvalid command format
     &7Command Usage:
     &b/lumitag set <Rank Name>
-    &b/lumitag off
+    &b/lumitag unset [prefix|suffix]
+    &b/lumitag claim
     
   invalid-format-moderator: |
     &cInvalid command format
     &7Command Usage:
     &b/lumitag set <Rank Name>
     &b/lumitag <Player> <Rank Name>
-    &b/lumitag off
+    &b/lumitag unset [prefix|suffix]
+    &b/lumitag claim
 
   rank-changed-self: "&aRank successfully changed!"
   rank-changed-other: "&a%player%'s Rank successfully changed!"

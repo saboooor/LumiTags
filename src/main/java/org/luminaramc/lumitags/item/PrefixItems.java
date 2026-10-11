@@ -46,7 +46,7 @@ public final class PrefixItems implements Listener {
         var meta = item.getItemMeta();
         meta.displayName(display);
         meta.lore(List.of(Component.text("Right-click to apply this " + type + "."),
-                Component.text("Replaces your current " + type + ". Consumed on use."),
+                Component.text("Replaces your current " + type + ". Returned when replaced or unset."),
                 Component.text("You can trade this item before applying it.")));
         meta.getPersistentDataContainer().set(prefixKey, PersistentDataType.STRING, formatted);
         meta.getPersistentDataContainer().set(typeKey, PersistentDataType.STRING, type);
@@ -88,14 +88,17 @@ public final class PrefixItems implements Listener {
         // Reserve the item before the asynchronous save to prevent repeated redemption.
         item.setAmount(item.getAmount() - 1);
         player.getInventory().setItem(event.getHand(), item);
-        var save = suffix ? plugin.getLuckPermsManager().setFormattedSuffix(player.getUniqueId(), prefix)
-                : plugin.getLuckPermsManager().setFormattedLumiTag(player.getUniqueId(), prefix);
+        var save = plugin.getLuckPermsManager().applyItem(player.getUniqueId(), suffix, prefix, consumed);
         save.whenComplete((ignored, error) ->
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     pending.remove(player.getUniqueId());
                     if (error != null) {
-                        player.getInventory().addItem(consumed).values().forEach(leftover ->
-                                player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+                        try { plugin.getTagItemStore().refund(player.getUniqueId(), consumed); }
+                        catch (java.io.IOException refundError) {
+                            player.getInventory().addItem(consumed).values().forEach(leftover ->
+                                    player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+                            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Could not persist returned item", refundError);
+                        }
                         player.sendMessage("Could not apply your " + type + ". Your item has been returned.");
                         plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to apply " + type + " for " + player.getUniqueId(), error);
                         return;
