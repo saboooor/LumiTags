@@ -147,7 +147,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Handle off for target player
+        // Handle unset for target player
         if (isUnset(args[1])) {
             String type = args.length == 2 ? "prefix" : args[2].toLowerCase(Locale.ROOT);
             if (args.length > 3 || !isTagType(type)) {
@@ -202,7 +202,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
                 if ("set".startsWith(input)) completions.add("set");
             }
             if (sender instanceof Player) {
-                for (String option : List.of("off", "unset", "claim")) {
+                for (String option : List.of("unset", "claim")) {
                     if (option.startsWith(input)) completions.add(option);
                 }
             }
@@ -226,13 +226,12 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
                     && !isUnset(args[0]) && !args[0].equalsIgnoreCase("claim") && !args[0].equalsIgnoreCase("reload")) {
                 // First arg was likely a player name, check if sender is moderator
                 if (sender.hasPermission(modPerm)) {
-                    if ("off".startsWith(input)) completions.add("off");
                     if ("unset".startsWith(input)) completions.add("unset");
                     addPresetCompletions(completions, input);
                 }
             }
         } else if (args.length == 3 && isUnset(args[1]) && sender.hasPermission(modPerm)
-                && !List.of("give", "set", "off", "unset", "claim", "reload").contains(args[0].toLowerCase(Locale.ROOT))) {
+                && !List.of("give", "set", "unset", "claim", "reload").contains(args[0].toLowerCase(Locale.ROOT))) {
             addTagTypeCompletions(completions, args[2]);
         }
 
@@ -240,7 +239,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
     }
 
     private boolean isUnset(String value) {
-        return value.equalsIgnoreCase("off") || value.equalsIgnoreCase("unset");
+        return value.equalsIgnoreCase("unset");
     }
 
     private boolean isTagType(String value) {

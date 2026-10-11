@@ -46,8 +46,8 @@ Commands:
 
 ## Removing tags and returning items
 
-Use `/lumitags unset [prefix|suffix]` (default: prefix). `/lumitags off`
-is an alias. Removing your own tag requires no custom-tag permission.
+Use `/lumitags unset [prefix|suffix]` (default: prefix).
+Removing your own tag requires no custom-tag permission.
 Staff can use `/lumitags <player> unset [prefix|suffix]` with the moderator
 permission.
 
