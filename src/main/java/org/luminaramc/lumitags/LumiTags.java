@@ -12,6 +12,7 @@ import java.util.logging.Level;
 
 public final class LumiTags extends JavaPlugin {
 
+    private org.luminaramc.lumitags.item.PrefixItems prefixItems;
     private LuckPerms luckPerms;
     private LuckPermsManager luckPermsManager;
 
@@ -29,6 +30,9 @@ public final class LumiTags extends JavaPlugin {
 
         // Initialize manager
         this.luckPermsManager = new LuckPermsManager(this);
+
+        this.prefixItems = new org.luminaramc.lumitags.item.PrefixItems(this);
+        getServer().getPluginManager().registerEvents(prefixItems, this);
 
         // Register command executor
         if (getCommand("lumitag") != null) {
@@ -131,7 +135,24 @@ public final class LumiTags extends JavaPlugin {
         String normal = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         String smallcaps = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ";
         StringBuilder sb = new StringBuilder();
-        for (char c : transformedRankName.toCharArray()) {
+        for (int i = 0; i < transformedRankName.length(); i++) {
+            char c = transformedRankName.charAt(i);
+            // Formatting markers and their codes must stay intact, including
+            // &l, §l, &#RRGGBB and the §x§R§R§G§G§B§B hex format.
+            if ((c == '&' || c == '§') && i + 1 < transformedRankName.length()) {
+                char code = transformedRankName.charAt(i + 1);
+                if ("0123456789abcdefklmnorx".indexOf(Character.toLowerCase(code)) >= 0) {
+                    sb.append(c).append(code);
+                    i++;
+                    continue;
+                }
+                if (code == '#' && i + 7 < transformedRankName.length()
+                        && transformedRankName.substring(i + 2, i + 8).matches("[0-9a-fA-F]{6}")) {
+                    sb.append(transformedRankName, i, i + 8);
+                    i += 7;
+                    continue;
+                }
+            }
             int index = normal.indexOf(c);
             if (index != -1) {
                 sb.append(smallcaps.charAt(index));
@@ -147,6 +168,10 @@ public final class LumiTags extends JavaPlugin {
             return transformedRankName;
         }
         return transformedRankName.substring(0, 1).toUpperCase() + transformedRankName.substring(1);
+    }
+
+    public org.luminaramc.lumitags.item.PrefixItems getPrefixItems() {
+        return prefixItems;
     }
 
     public LuckPerms getLuckPerms() {

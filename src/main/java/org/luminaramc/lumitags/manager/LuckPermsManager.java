@@ -2,6 +2,7 @@ package org.luminaramc.lumitags.manager;
 
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.PrefixNode;
+import net.luckperms.api.node.types.SuffixNode;
 import org.bukkit.Bukkit;
 import org.luminaramc.lumitags.LumiTags;
 
@@ -23,24 +24,26 @@ public class LuckPermsManager {
      * @param onSuccess Callback to run on the Bukkit main thread after saving is complete.
      */
     public void setLumiTag(UUID uuid, String rankName, Runnable onSuccess) {
+        setFormattedLumiTag(uuid, plugin.applyTransformations(rankName)).thenRun(() -> {
+            if (onSuccess != null) Bukkit.getScheduler().runTask(plugin, onSuccess);
+        });
+    }
+
+    public java.util.concurrent.CompletableFuture<Void> setFormattedLumiTag(UUID uuid, String prefix) {
         int priority = plugin.getConfig().getInt("prefix-weight", 500);
-
-        String transformedRankName = plugin.applyTransformations(rankName);
-
-        plugin.getLuckPerms().getUserManager().loadUser(uuid).thenAcceptAsync(user -> {
-            // Remove any existing prefix at our priority level
+        return plugin.getLuckPerms().getUserManager().loadUser(uuid).thenCompose(user -> {
             user.data().clear(NodeType.PREFIX.predicate(node -> node.getPriority() == priority));
+            user.data().add(PrefixNode.builder(prefix, priority).build());
+            return plugin.getLuckPerms().getUserManager().saveUser(user);
+        });
+    }
 
-            // Create and add the new prefix node
-            PrefixNode prefixNode = PrefixNode.builder(transformedRankName, priority).build();
-            user.data().add(prefixNode);
-
-            // Save the user data and fire success callback on the main server thread
-            plugin.getLuckPerms().getUserManager().saveUser(user).thenRun(() -> {
-                if (onSuccess != null) {
-                    Bukkit.getScheduler().runTask(plugin, onSuccess);
-                }
-            });
+    public java.util.concurrent.CompletableFuture<Void> setFormattedSuffix(UUID uuid, String suffix) {
+        int priority = plugin.getConfig().getInt("suffix-weight", 500);
+        return plugin.getLuckPerms().getUserManager().loadUser(uuid).thenCompose(user -> {
+            user.data().clear(NodeType.SUFFIX.predicate(node -> node.getPriority() == priority));
+            user.data().add(SuffixNode.builder(suffix, priority).build());
+            return plugin.getLuckPerms().getUserManager().saveUser(user);
         });
     }
 

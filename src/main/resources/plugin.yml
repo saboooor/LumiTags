@@ -9,10 +9,13 @@ depend: [LuckPerms]
 commands:
   lumitag:
     description: Manage user rank nicknames
-    permission: lumitags.use
+    aliases: [lumitags]
     usage: /lumitag
 
 permissions:
+  lumitags.give:
+    description: Allows creating transferable prefix items.
+    default: op
   lumitags.use:
     description: Allows users to change their own rank nickname.
     default: op

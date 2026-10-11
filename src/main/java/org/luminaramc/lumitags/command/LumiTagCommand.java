@@ -41,6 +41,33 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("give")) {
+            String givePerm = plugin.getConfig().getString("permissions.give", "lumitags.give");
+            if (!sender.hasPermission(givePerm)) {
+                sender.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.no-permission")));
+                return true;
+            }
+            if (args.length < 3) {
+                sender.sendMessage("Usage: /lumitags give <player> <preset or prefix>");
+                return true;
+            }
+            Player recipient = Bukkit.getPlayerExact(args[1]);
+            if (recipient == null) {
+                sender.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.player-not-found")
+                        .replace("%player%", args[1])));
+                return true;
+            }
+            String prefix = joinArgs(args, 2);
+            var item = plugin.getPrefixItems().create(prefix);
+            if (recipient.getInventory().firstEmpty() == -1) {
+                sender.sendMessage("The player's inventory is full.");
+                return true;
+            }
+            recipient.getInventory().addItem(item);
+            sender.sendMessage("Gave a prefix item to " + recipient.getName() + ".");
+            return true;
+        }
+
         // Subcommand: off (self)
         if (args[0].equalsIgnoreCase("off")) {
             if (!(sender instanceof Player)) {
@@ -135,8 +162,24 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
         String modPerm = plugin.getConfig().getString("permissions.moderator", "group.moderator");
         String adminPerm = plugin.getConfig().getString("permissions.admin", "lumitags.admin");
 
+        String givePerm = plugin.getConfig().getString("permissions.give", "lumitags.give");
+        if (args[0].equalsIgnoreCase("give") && sender.hasPermission(givePerm)) {
+            if (args.length == 2) {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (player.getName().toLowerCase(java.util.Locale.ROOT).startsWith(args[1].toLowerCase(java.util.Locale.ROOT)))
+                        completions.add(player.getName());
+                }
+            } else if (args.length == 3) {
+                var presets = plugin.getConfig().getConfigurationSection("presets");
+                if (presets != null) for (String preset : presets.getKeys(false)) {
+                    if (preset.startsWith(args[2].toLowerCase(java.util.Locale.ROOT))) completions.add(preset);
+                }
+            }
+            if (args.length > 1) return completions;
+        }
         if (args.length == 1) {
             String input = args[0].toLowerCase();
+            if (sender.hasPermission(givePerm) && "give".startsWith(input)) completions.add("give");
             if (sender.hasPermission(usePerm)) {
                 if ("set".startsWith(input)) completions.add("set");
                 if ("off".startsWith(input)) completions.add("off");
@@ -168,6 +211,8 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
         String msgKey = sender.hasPermission(modPerm) ? "messages.invalid-format-moderator" : "messages.invalid-format";
         String usage = plugin.getConfig().getString(msgKey);
         sender.sendMessage(plugin.colorize(usage));
+        if (sender.hasPermission(plugin.getConfig().getString("permissions.give", "lumitags.give")))
+            sender.sendMessage("/lumitags give <player> <preset or prefix>");
     }
 
     private String joinArgs(String[] args, int startIndex) {

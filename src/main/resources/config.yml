@@ -6,9 +6,13 @@
 # Higher priority values take precedence.
 prefix-weight: 500
 
+# Independent priority for emoji suffixes.
+suffix-weight: 500
+
 # Permissions settings.
 # You can customize these if you want to use existing permission nodes.
 permissions:
+  give: "lumitags.give"
   use: "lumitags.use"
   moderator: "lumitags.moderator"
   admin: "lumitags.admin"
@@ -54,3 +58,85 @@ messages:
   
   player-not-found: "&cPlayer '%player%' is not online or cannot be found."
   reload-success: "&aLumiTags configuration successfully reloaded."
+
+# Preset IDs accepted by /lumitags give <player> <preset>.
+# Presets preserve their MiniMessage formatting without custom transformations.
+presets:
+  coffee:
+    prefix: '<i><b><gradient:#6F4E37:#6F4E37>ᴄᴏꜰꜰᴇ</gradient><gradient:#6F4E37:#6F4E37>ᴇ</gradient></b></i>'
+    material: NAME_TAG
+  maple:
+    prefix: '<b><gradient:#BB9351:#BB9351>ᴍ</gradient><gradient:#BB9351:#BB9351>ᴀᴘʟ</gradient><gradient:#BB9351:#BB9351>ᴇ</gradient></b>'
+    material: NAME_TAG
+  nd:
+    prefix: '<i><b><gradient:#FF0000:#910C0C>ɴᴅ</gradient></b></i>'
+    material: NAME_TAG
+  cherry-blossom:
+    prefix: '<b><gradient:#DEA5E2:#E5E5E5>ᴄʜᴇʀʀʏ ʙʟᴏѕѕᴏᴍ</gradient></b>'
+    material: NAME_TAG
+  ice:
+    prefix: '<i><b><gradient:#C2D8FA:#C2D8FA>ɪᴄ</gradient><gradient:#C2D8FA:#C2D8FA>ᴇ</gradient></b></i>'
+    material: NAME_TAG
+  evil:
+    prefix: '<i><b><gradient:#AB1717:#AB1717>ᴇᴠɪʟ</gradient></b></i>'
+    material: NAME_TAG
+  sugartooth:
+    prefix: '<u><b><gradient:#FFbeef:#9BFDAE>ѕᴜɢ</gradient><gradient:#9BFDAE:#FAE499>ᴀʀᴛᴏ</gradient><gradient:#FAE499:#B9F1FF>ᴏᴛʜ</gradient></b></u>'
+    material: NAME_TAG
+  milky:
+    prefix: '<i><b><gradient:#FFFFFF:#FFFFFF>ᴍɪʟᴋʏ</gradient></b></i>'
+    material: NAME_TAG
+  toxic:
+    prefix: '<i><b><gradient:#17AB2D:#17AB2D>ᴛᴏxɪᴄ</gradient></b></i>'
+    material: NAME_TAG
+  amethyst:
+    prefix: '<i><b><gradient:#9541E9:#9541E9>ᴀ</gradient><gradient:#9541E9:#9541E9>ᴍᴇᴛʜʏ</gradient><gradient:#9541E9:#9541E9>ѕᴛ</gradient></b></i>'
+    material: NAME_TAG
+  void-star:
+    prefix: '<u><b><gradient:#C6DEF1:#FFFFFF>ᴠᴏɪᴅ ѕᴛᴀʀ</gradient></b></u>'
+    material: NAME_TAG
+  wither:
+    prefix: '<i><b><gradient:#0E100E:#0E100E>ᴡɪᴛʜᴇʀ</gradient></b></i>'
+    material: NAME_TAG
+  glorp:
+    prefix: '<b><gradient:#54F47F:#50963D:#B3E94A>ɢʟᴏʀᴘ</gradient></b>'
+    material: NAME_TAG
+  trademark:
+    suffix: '™'
+    material: PAPER
+  comet:
+    suffix: '☄'
+    material: PAPER
+  wave:
+    suffix: '🌊'
+    material: PAPER
+  skull:
+    suffix: '☠'
+    material: PAPER
+  snowman:
+    suffix: '☃'
+    material: PAPER
+  star:
+    suffix: '✦'
+    material: PAPER
+  heart:
+    suffix: '❤'
+    material: PAPER
+  smile:
+    suffix: '☺'
+    material: PAPER
+  fire:
+    suffix: '🔥'
+    material: PAPER
+  music:
+    suffix: '♬'
+    material: PAPER
+  infinity:
+    suffix: '∞'
+    material: PAPER
+  sun:
+    suffix: '☀'
+    material: PAPER
+  cloud:
+    suffix: '☁'
+    material: PAPER
