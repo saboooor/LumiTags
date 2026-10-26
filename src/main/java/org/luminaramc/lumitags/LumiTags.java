@@ -34,6 +34,13 @@ public final class LumiTags extends JavaPlugin {
 
         // Initialize manager
         this.luckPermsManager = new LuckPermsManager(this);
+        // Poll effective permissions to cover inherited, temporary and contextual changes,
+        // offline revocations on join, and players already online when the plugin enables.
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            for (var player : getServer().getOnlinePlayers()) {
+                luckPermsManager.enforceCustomTagPermission(player);
+            }
+        }, 20L, 20L);
 
         this.prefixItems = new org.luminaramc.lumitags.item.PrefixItems(this);
         getServer().getPluginManager().registerEvents(prefixItems, this);
@@ -188,3 +195,4 @@ public final class LumiTags extends JavaPlugin {
         return luckPermsManager;
     }
 }
+
