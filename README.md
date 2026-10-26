@@ -56,6 +56,14 @@ that same tag type, including through a set command, or unsetting it returns
 the exact item. Command-created tags do not produce items when removed.
 Prefix and suffix ownership are independent.
 
+Command-set tags require the player's configured `permissions.use` permission
+(`lumitags.use` by default) to remain active, including tags set by staff.
+Online players are checked every second. Revoking that permission removes their
+command-set prefix and suffix at the configured LumiTags weights, one slot per
+check. This also handles permission expiry, inherited/contextual changes and
+revocations while offline after the player rejoins. Tags redeemed from items
+remain active without this permission; other LuckPerms priorities are untouched.
+
 Ownership and returned items are saved in `tag-items.yml` across restarts.
 If the inventory is full or the player is offline, returns wait in a queue.
 They are delivered on joining or with `/lumitags claim`; no permission is needed.
@@ -85,3 +93,4 @@ Build with `mvn package`. Before deployment, test on a Paper server with LuckPer
   unsetting and confirm `/lumitags claim` delivers the queued item once there
   is space. Disconnect while applying an item and confirm any return arrives
   on the next join.
+

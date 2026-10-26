@@ -8,6 +8,7 @@ import net.luckperms.api.node.types.PrefixNode;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.*;
@@ -75,6 +76,91 @@ class LuckPermsManagerTest {
         return old;
     }
 
+    Player onlinePlayer() {
+        Player player = mock(Player.class);
+        when(player.getUniqueId()).thenReturn(uuid);
+        when(player.isOnline()).thenReturn(true);
+        when(users.getUser(uuid)).thenReturn(user);
+        return player;
+    }
+
+    @Test void revokedPermissionRemovesExistingCustomTag() throws Exception {
+        Player player = onlinePlayer();
+        PrefixNode prefix = oldPrefix();
+        when(user.data().toCollection()).thenReturn(List.of(prefix));
+        manager.enforceCustomTagPermission(player);
+        verify(users).saveUser(user);
+        verify(store).replace(uuid, "prefix", null);
+        verify(user.data(), never()).add(any());
+    }
+
+    @Test void configuredPermissionKeepsCustomTag() {
+        Player player = onlinePlayer();
+        plugin.getConfig().set("permissions.use", "server.customtag");
+        when(player.hasPermission("server.customtag")).thenReturn(true);
+        PrefixNode prefix = oldPrefix();
+        when(user.data().toCollection()).thenReturn(List.of(prefix));
+        manager.enforceCustomTagPermission(player);
+        verify(users, never()).saveUser(any());
+        verifyNoInteractions(store);
+    }
+
+    @Test void itemPrefixSurvivesWhileCustomSuffixIsRemoved() throws Exception {
+        Player player = onlinePlayer();
+        var suffix = mock(net.luckperms.api.node.types.SuffixNode.class);
+        when(suffix.getPriority()).thenReturn(500);
+        when(suffix.getType()).thenReturn(net.luckperms.api.node.NodeType.SUFFIX);
+        PrefixNode prefix = oldPrefix();
+        when(user.data().toCollection()).thenReturn(List.of(prefix, suffix));
+        when(store.hasActiveItem(uuid, "prefix")).thenReturn(true);
+        manager.enforceCustomTagPermission(player);
+        verify(store).replace(uuid, "suffix", null);
+        verify(store, never()).replace(eq(uuid), eq("prefix"), any());
+        org.mockito.ArgumentCaptor<java.util.function.Predicate<Node>> predicate =
+                org.mockito.ArgumentCaptor.forClass(java.util.function.Predicate.class);
+        verify(user.data()).clear(predicate.capture());
+        assertFalse(predicate.getValue().test(oldPrefix()));
+        assertTrue(predicate.getValue().test(suffix));
+    }
+
+    @Test void itemTagsAndOtherLuckPermsWeightsSurvive() {
+        Player player = onlinePlayer();
+        PrefixNode other = oldPrefix();
+        when(other.getPriority()).thenReturn(100);
+        when(user.data().toCollection()).thenReturn(List.of(other));
+        manager.enforceCustomTagPermission(player);
+        PrefixNode prefix = oldPrefix();
+        when(user.data().toCollection()).thenReturn(List.of(prefix));
+        when(store.hasActiveItem(uuid, "prefix")).thenReturn(true);
+        manager.enforceCustomTagPermission(player);
+        verify(users, never()).saveUser(any());
+    }
+
+    @Test void permissionCheckWaitsForPendingItemSave() {
+        Player player = onlinePlayer();
+        CompletableFuture<Void> save = new CompletableFuture<>();
+        when(users.saveUser(user)).thenReturn(save);
+        var applying = manager.applyItem(uuid, false, "coffee", new ItemStack(Material.NAME_TAG));
+        PrefixNode prefix = oldPrefix();
+        when(user.data().toCollection()).thenReturn(List.of(prefix));
+        manager.enforceCustomTagPermission(player);
+        verify(users, times(1)).loadUser(uuid);
+        verifyNoInteractions(store);
+        save.complete(null);
+        applying.join();
+    }
+
+    @Test void missingUserIsRetriedOnLaterPoll() throws Exception {
+        Player player = onlinePlayer();
+        when(users.getUser(uuid)).thenReturn(null, user);
+        PrefixNode prefix = oldPrefix();
+        when(user.data().toCollection()).thenReturn(List.of(prefix));
+        manager.enforceCustomTagPermission(player);
+        verify(users, never()).saveUser(any());
+        manager.enforceCustomTagPermission(player);
+        verify(store).replace(uuid, "prefix", null);
+    }
+
     @Test void commandsCannotReplaceItemWhileItsSaveIsPending() throws Exception {
         CompletableFuture<Void> save = new CompletableFuture<>();
         when(users.saveUser(user)).thenReturn(save);
@@ -117,3 +203,4 @@ class LuckPermsManagerTest {
         verify(users, times(2)).saveUser(user);
     }
 }
+
