@@ -17,7 +17,10 @@ permissions:
     description: Allows creating transferable prefix items.
     default: op
   lumitags.use:
-    description: Allows users to change their own rank nickname.
+    description: Allows users to set their own custom tag text.
+    default: op
+  lumitags.presets:
+    description: Allows selecting configured presets directly with set commands.
     default: op
   lumitags.moderator:
     description: Allows staff to change other users' rank nicknames.

@@ -59,6 +59,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             String prefix = joinArgs(args, 2);
+            if (rejectBlockedCustomText(sender, prefix)) return true;
             var item = plugin.getPrefixItems().create(prefix);
             if (recipient.getInventory().firstEmpty() == -1) {
                 sender.sendMessage("The player's inventory is full.");
@@ -109,7 +110,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             Player player = (Player) sender;
-            if (!player.hasPermission(usePerm)) {
+            if (!player.hasPermission(usePerm) && !canSetPresets(player)) {
                 player.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.no-permission")));
                 return true;
             }
@@ -121,6 +122,11 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
 
             // Join arguments to support spaces in rank nickname
             String rankName = joinArgs(args, 1);
+            if (!(isPreset(rankName) ? canSetPresets(player) : player.hasPermission(usePerm))) {
+                player.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.no-permission")));
+                return true;
+            }
+            if (rejectBlockedCustomText(sender, rankName)) return true;
             plugin.getLuckPermsManager().setLumiTag(player.getUniqueId(), rankName, () -> {
                 player.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.rank-changed-self")));
                 runConsoleCommands(true, player, rankName);
@@ -165,6 +171,11 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
 
         // Set rank nick for target player
         String rankName = joinArgs(args, 1);
+        if (isPreset(rankName) && !canSetPresets(sender)) {
+            sender.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.no-permission")));
+            return true;
+        }
+        if (rejectBlockedCustomText(sender, rankName)) return true;
         plugin.getLuckPermsManager().setLumiTag(target.getUniqueId(), rankName, () -> {
             String changedOther = plugin.getConfig().getString("messages.rank-changed-other", "&a%player%'s Rank successfully changed!")
                     .replace("%player%", target.getName());
@@ -198,7 +209,7 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             String input = args[0].toLowerCase(Locale.ROOT);
             if (sender.hasPermission(givePerm) && "give".startsWith(input)) completions.add("give");
-            if (sender.hasPermission(usePerm)) {
+            if (sender.hasPermission(usePerm) || canSetPresets(sender)) {
                 if ("set".startsWith(input)) completions.add("set");
             }
             if (sender instanceof Player) {
@@ -220,14 +231,14 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
             String input = args[1].toLowerCase(Locale.ROOT);
             if (isUnset(args[0]) && sender instanceof Player) {
                 addTagTypeCompletions(completions, input);
-            } else if (args[0].equalsIgnoreCase("set") && sender.hasPermission(usePerm)) {
+            } else if (args[0].equalsIgnoreCase("set") && canSetPresets(sender)) {
                 addPresetCompletions(completions, input);
             } else if (!args[0].equalsIgnoreCase("give") && !args[0].equalsIgnoreCase("set")
                     && !isUnset(args[0]) && !args[0].equalsIgnoreCase("claim") && !args[0].equalsIgnoreCase("reload")) {
                 // First arg was likely a player name, check if sender is moderator
                 if (sender.hasPermission(modPerm)) {
                     if ("unset".startsWith(input)) completions.add("unset");
-                    addPresetCompletions(completions, input);
+                    if (canSetPresets(sender)) addPresetCompletions(completions, input);
                 }
             }
         } else if (args.length == 3 && isUnset(args[1]) && sender.hasPermission(modPerm)
@@ -236,6 +247,24 @@ public class LumiTagCommand implements CommandExecutor, TabCompleter {
         }
 
         return completions;
+    }
+
+    private boolean rejectBlockedCustomText(CommandSender sender, String input) {
+        if (isPreset(input) || !org.luminaramc.lumitags.text.TagBlacklist.isBlocked(
+                input, plugin.getConfig().getStringList("custom-text-blacklist"))) return false;
+        sender.sendMessage(plugin.colorize(plugin.getConfig().getString(
+                "messages.blocked-custom-text", "&cThat tag contains blocked text.")));
+        return true;
+    }
+
+    private boolean canSetPresets(CommandSender sender) {
+        return sender.hasPermission(plugin.getConfig().getString("permissions.presets", "lumitags.presets"));
+    }
+
+    private boolean isPreset(String input) {
+        String path = "presets." + input.toLowerCase(Locale.ROOT);
+        return plugin.getConfig().getString(path + ".prefix") != null
+                || plugin.getConfig().getString(path + ".suffix") != null;
     }
 
     private boolean isUnset(String value) {

@@ -13,9 +13,18 @@ suffix-weight: 500
 # You can customize these if you want to use existing permission nodes.
 permissions:
   give: "lumitags.give"
+  # Custom text and direct preset selection are independent permissions.
   use: "lumitags.use"
+  presets: "lumitags.presets"
   moderator: "lumitags.moderator"
   admin: "lumitags.admin"
+
+# Blocked terms in custom text (case-insensitive substring matching).
+# Color codes, MiniMessage tags and invisible format characters are stripped first.
+# Applies to self/staff set commands and custom text in /lumitags give.
+# Configured presets are exempt. Reload with /lumitags reload after editing.
+custom-text-blacklist: []
+# Example: custom-text-blacklist: ["blockedword", "blocked phrase"]
 
 # Console commands to execute when a lumitag action is taken.
 # Placeholders: %player% (target player), %rank% (the rank nickname)
@@ -34,6 +43,7 @@ transformations:
 # Customize messages sent to players and staff.
 # Color codes (&) are supported.
 messages:
+  blocked-custom-text: "&cThat tag contains blocked text."
   no-permission: "&cYou do not have permission to execute this command."
   no-permission-other: "&cYou don't have the permission to set other people's LumiTags!"
   

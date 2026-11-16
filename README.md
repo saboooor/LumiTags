@@ -2,6 +2,38 @@
 
 LumiTags requires Paper (Java 21+) and LuckPerms.
 
+## Setting permissions
+
+`lumitags.use` allows `/lumitags set <custom text>`.
+`lumitags.presets` separately allows `/lumitags set <preset>` (prefixes and
+suffixes), without requiring `.use`. Both default to operators and can be
+renamed under `permissions` in `config.yml`. Players with only `.use` cannot
+select presets or see preset suggestions. Staff setting a preset for another
+player need both the moderator permission and `lumitags.presets`.
+
+To keep presets exclusive to reward items, leave `lumitags.presets` ungranted
+(or explicitly deny it for operators). Item redemption still needs no permission;
+creating items remains controlled by `lumitags.give`.
+
+## Custom text blacklist
+
+Add terms to `custom-text-blacklist` in `config.yml`, then run `/lumitags reload`:
+
+```yaml
+custom-text-blacklist:
+  - blockedword
+  - blocked phrase
+```
+
+Matching ignores case and strips MiniMessage tags, legacy `&`/`§` color and
+formatting codes (including hex colors), and invisible format characters.
+For example, `blockedword` also blocks `blocked&cword` and
+`blocked<red>word</red>`. Terms match anywhere inside the text, including longer
+words. Blank entries are ignored. Unicode compatibility forms are normalized.
+The blacklist applies to custom text in self/staff set commands and item creation
+with `/lumitags give`, including commands from operators and console. Configured
+presets are exempt; existing items and tags are unaffected.
+
 ## Transferable tag items
 
 Run `/lumitags give <online-player> <preset>` from console or with `lumitags.give`
