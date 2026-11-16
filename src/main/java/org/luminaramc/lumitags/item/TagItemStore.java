@@ -37,6 +37,10 @@ public final class TagItemStore implements Listener {
     private String active(UUID uuid, String type) { return "players." + uuid + ".active." + type; }
     private String refunds(UUID uuid) { return "players." + uuid + ".refunds"; }
 
+    public boolean hasActiveItem(UUID uuid, String type) {
+        return data.getItemStack(active(uuid, type)) != null;
+    }
+
     public void replace(UUID uuid, String type, ItemStack replacement) throws IOException {
         String snapshot = data.saveToString();
         ItemStack previous = data.getItemStack(active(uuid, type));
@@ -111,3 +115,4 @@ public final class TagItemStore implements Listener {
         catch (IOException error) { Bukkit.getLogger().log(java.util.logging.Level.SEVERE, "Could not deliver returned tag items", error); }
     }
 }
+

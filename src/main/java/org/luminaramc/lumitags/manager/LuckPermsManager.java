@@ -5,6 +5,7 @@ import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.PrefixNode;
 import net.luckperms.api.node.types.SuffixNode;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.luminaramc.lumitags.LumiTags;
 
@@ -19,6 +20,29 @@ public class LuckPermsManager {
     private final Set<UUID> pending = new HashSet<>();
 
     public LuckPermsManager(LumiTags plugin) { this.plugin = plugin; }
+
+    /** Runs on the server thread, after Bukkit has refreshed effective permissions. */
+    public void enforceCustomTagPermission(Player player) {
+        UUID uuid = player.getUniqueId();
+        if (!player.isOnline() || pending.contains(uuid)
+                || player.hasPermission(plugin.getConfig().getString("permissions.use", "lumitags.use"))) return;
+        var user = plugin.getLuckPerms().getUserManager().getUser(uuid);
+        if (user == null) return; // LuckPerms may still be loading a joining player.
+        for (boolean suffix : new boolean[] {false, true}) {
+            String type = suffix ? "suffix" : "prefix";
+            if (plugin.getTagItemStore().hasActiveItem(uuid, type)) continue;
+            if (user.data().toCollection().stream().noneMatch(tagNodes(suffix))) continue;
+            // Use the same lock and rollback as commands/items. Check the other slot next poll.
+            finishCommand(uuid, change(uuid, suffix, null, null), null);
+            return;
+        }
+    }
+
+    private Predicate<Node> tagNodes(boolean suffix) {
+        int priority = plugin.getConfig().getInt(suffix ? "suffix-weight" : "prefix-weight", 500);
+        return suffix ? NodeType.SUFFIX.predicate(node -> node.getPriority() == priority)
+                : NodeType.PREFIX.predicate(node -> node.getPriority() == priority);
+    }
 
     public void setLumiTag(UUID uuid, String rankName, Runnable onSuccess) {
         String path = "presets." + rankName.toLowerCase(java.util.Locale.ROOT);
@@ -68,9 +92,7 @@ public class LuckPermsManager {
         String type = suffix ? "suffix" : "prefix";
         ItemStack replacement = sourceItem == null ? null : sourceItem.clone();
         if (replacement != null) replacement.setAmount(1);
-        Predicate<Node> matches = suffix
-                ? NodeType.SUFFIX.predicate(node -> node.getPriority() == priority)
-                : NodeType.PREFIX.predicate(node -> node.getPriority() == priority);
+        Predicate<Node> matches = tagNodes(suffix);
         CompletableFuture<Void> result = new CompletableFuture<>();
         plugin.getLuckPerms().getUserManager().loadUser(uuid).thenCompose(user -> {
             var oldNodes = user.data().toCollection().stream().filter(matches).toList();
@@ -110,3 +132,4 @@ public class LuckPermsManager {
         return result;
     }
 }
+

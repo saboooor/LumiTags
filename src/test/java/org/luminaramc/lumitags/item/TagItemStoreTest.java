@@ -55,6 +55,8 @@ class TagItemStoreTest {
         store.replace(uuid, "prefix", item(Material.NAME_TAG));
         assertEquals(0, saved().getList(refunds()).size());
         store = new TagItemStore(file);
+        assertTrue(store.hasActiveItem(uuid, "prefix"));
+        assertFalse(store.hasActiveItem(uuid, "suffix"));
         store.replace(uuid, "prefix", item(Material.PAPER));
         store.replace(uuid, "prefix", null);
         store.replace(uuid, "prefix", null);
@@ -63,6 +65,7 @@ class TagItemStoreTest {
         assertEquals(Material.NAME_TAG, ((ItemStack) returns.get(0)).getType());
         assertEquals(Material.PAPER, ((ItemStack) returns.get(1)).getType());
         assertNull(saved().getItemStack(active("prefix")));
+        assertFalse(store.hasActiveItem(uuid, "prefix"));
     }
 
     @Test void commandReplacementReturnsItemButDoesNotCreateAnItem() throws Exception {
@@ -122,3 +125,4 @@ class TagItemStoreTest {
         assertEquals(1, saved().getList(refunds()).size());
     }
 }
+
